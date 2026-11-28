@@ -1266,3 +1266,11 @@ body.graph-dark .graph-fit[hidden]{display:none}
 /* Keep the closing sentence on one proportional line, retaining its underline. */
 .home-closing .intro-subtitle{white-space:nowrap}
 .home-closing .closing-statement{position:relative;display:block;width:max-content;max-width:none;left:50%;white-space:nowrap;transform:translateX(-50%) scale(var(--closing-scale,1));transform-origin:center}
+
+/* Mobile graph gestures scroll the document; book details expand naturally. */
+@media(max-width:700px){
+ body.graph-dark .network-panel,body.graph-dark .network-book-list{max-height:none;overflow:visible}
+ body.graph-dark #knowledge-canvas,body.graph-dark #knowledge-canvas *{touch-action:pan-y!important}
+}
+body.graph-dark .graph-fit{width:33px;height:33px;bottom:16px}
+body.graph-dark .graph-fit svg{width:18.75px;height:18.75px}
