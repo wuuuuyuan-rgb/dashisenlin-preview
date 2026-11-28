@@ -1116,6 +1116,8 @@ body:not(.graph-dark) .site-footer .footer-brand{color:#d0b56c}
 /* Compact fit-view icon; keep the mobile detail cue in a separate corner. */
 body.graph-dark .graph-fit{display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:4px;border-radius:6px}
 body.graph-dark .graph-fit svg{width:12.5px;height:12.5px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+/* Reuse the empty canvas gutter above the mobile book card; preserve graph size. */
+@media(max-width:700px){body.graph-dark .network-panel{margin-top:-18px;padding-top:0;border-top:0}}
 body.graph-dark .graph-fit[hidden]{display:none}
 @media(max-width:700px){body.graph-dark .mobile-detail-hint:not([hidden]){left:50%;right:auto;transform:translateX(-50%);max-width:calc(100vw - 100px);height:30.8px;min-height:30.8px;padding:4px 18px}}
 
@@ -1172,3 +1174,95 @@ body.graph-dark .graph-fit[hidden]{display:none}
 /* Header: grass-green master lettering/English, white forest lettering. */
 .header-brand-mark .header-brand-green{opacity:0}
 .header-brand-mark:before{content:"";position:absolute;inset:0;background:#a3d24a;mask:url("../assets/brand-original/forest-masters-logo.png") center/contain no-repeat}
+
+/* Mobile book choices unfold directly from their trigger, without a bottom overlay. */
+@media(max-width:700px){
+ .mobile-book-select{position:relative;width:70%;margin-top:8px;z-index:46}
+ .mobile-book-select .mobile-book-picker{width:100%;margin:0}
+ .mobile-book-select:has(.mobile-book-drawer[open]) .mobile-book-picker{border-radius:4px 4px 0 0;border-bottom-color:transparent}
+ .mobile-book-select .mobile-picker-action>span{display:inline-block;transform:rotate(180deg)}
+ .mobile-book-select:has(.mobile-book-drawer[open]) .mobile-picker-action>span{transform:none}
+ .mobile-book-select dialog.mobile-book-drawer[open]{position:absolute;inset:100% auto auto 0;width:100%;max-width:100%;max-height:min(48svh,340px);margin:0;padding:6px 10px 10px;border:1px solid #688674;border-top:0;border-radius:0 0 7px 7px;background:#153b2b;box-shadow:0 8px 14px #0002}
+ .mobile-book-select .mobile-drawer-handle{display:none}
+ .mobile-book-select .mobile-drawer-heading h2{font-size:11px}
+ body.graph-dark.book-drawer-open{overflow:auto}
+}
+/* Homepage knowledge window: moving artwork with one clear entry. */
+.classic-home .home-knowledge{isolation:isolate;background:radial-gradient(ellipse at 50% 48%,#163f31 5%,#10392c 55%,#041f17 100%);box-shadow:inset 0 0 60px #00170f55;color:#f4f5ed;margin:8px 0 34px}
+.home-knowledge .home-knowledge-layout{display:grid;grid-template-columns:minmax(280px,.88fr) minmax(0,1.3fr);grid-template-rows:auto auto;column-gap:44px;row-gap:16px;padding-top:28.8px;padding-bottom:28.8px;align-items:center;position:relative}
+.home-knowledge .home-knowledge-copy{grid-column:1;grid-row:1;align-self:end}
+.home-knowledge .home-knowledge-book{display:inline-block;padding:4px 9px;background:#f0f1e6;color:#173e2e;border-radius:5px;font:600 13px/1.5 var(--sans)}
+.home-knowledge .home-knowledge-copy h2{font-family:var(--serif);font-size:clamp(30px,3.3vw,44px);font-weight:700;line-height:1.4;color:#f4f5ed;letter-spacing:0;margin:20px 0 16px}
+.home-knowledge .home-knowledge-copy h2 em{font-style:normal;color:#b9dd65}
+.home-knowledge .home-knowledge-copy>p{font:16px/1.9 var(--sans);color:#e0e9df;max-width:340px;margin:0}
+.home-knowledge .home-knowledge-stage{grid-column:2;grid-row:1/3;position:relative;height:360px;min-width:0;pointer-events:none}
+.home-knowledge .home-knowledge-plot{position:relative;width:100%;height:400px;transform:translate(-.5cm,-8px) scale(.9);transform-origin:center;isolation:isolate}
+.home-knowledge .home-knowledge-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.home-knowledge .home-knowledge-lines line{stroke:#82b59d;stroke-width:1;vector-effect:non-scaling-stroke;opacity:.55}
+.home-knowledge .home-knowledge-node{position:absolute;display:grid;place-items:center;width:28px;height:28px;color:#e9f2e7;transform:translate(-50%,-50%);z-index:1;font:12px/1.4 var(--sans);pointer-events:none}
+.home-knowledge .home-knowledge-dot{display:block;position:relative;width:20px;height:20px;border-radius:50%;background:#5dbb9c}
+.home-knowledge .home-knowledge-node.is-hub .home-knowledge-dot{width:31px;height:31px;background:#b5d95d}
+.home-knowledge .home-knowledge-node.is-social .home-knowledge-dot{background:#d0b674}
+.home-knowledge .home-knowledge-node.is-featured .home-knowledge-dot{width:28px;height:28px;background:#b5d95d}
+.home-knowledge .home-knowledge-node.is-featured .home-knowledge-dot:after{content:"";position:absolute;inset:-10px;border-radius:50%;background:#a3d24a25;animation:home-knowledge-pulse 3s ease-in-out infinite}
+.home-knowledge .home-knowledge-label{position:absolute;bottom:31px;left:50%;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 4px #10392c}
+.home-knowledge .home-knowledge-node.is-hub .home-knowledge-label{bottom:auto;top:32px;font-size:14px;font-weight:700}
+.home-knowledge .home-knowledge-node.is-featured .home-knowledge-label{bottom:auto;top:32px}
+.home-knowledge .home-knowledge-tooltip{position:absolute;z-index:2;width:140px;max-width:calc(100% - 12px);padding:7px 8px;background:#f2f0e5;color:#173e2e;border-radius:7px;box-shadow:0 4px 16px #061d2520;font-family:var(--sans)}
+.home-knowledge .home-knowledge-tail{position:absolute;left:0;top:calc(100% - 1px);width:100%;overflow:visible;pointer-events:none}.home-knowledge .home-knowledge-tail path{fill:#f2f0e5;stroke:none;stroke-width:0}
+.home-knowledge .home-knowledge-tooltip strong{display:block;font-size:12px;line-height:1.4}
+.home-knowledge .home-knowledge-tooltip p{font-size:11px;line-height:1.5;margin:2px 0 0}
+.home-knowledge .home-knowledge-entry{grid-column:1;grid-row:2;align-self:start}
+.home-knowledge .home-knowledge-cta{display:inline-flex;gap:12px;align-items:center;justify-content:center;min-height:44px;padding:10px 28px;border-radius:28px;background:#a3d24a;color:#173e2e;font:700 16px/1.5 var(--sans);text-decoration:none;transition:background .15s}
+.home-knowledge .home-knowledge-cta:hover{background:#b8e16d}
+.home-knowledge .home-knowledge-cta:focus-visible{outline:2px solid #f4f5ed;outline-offset:4px}
+.home-knowledge.is-motion-paused .home-knowledge-dot:after{animation-play-state:paused!important}
+@keyframes home-knowledge-pulse{0%,100%{transform:scale(.85);opacity:.5}50%{transform:scale(1.2);opacity:1}}
+@media(min-width:701px){.home-knowledge .home-knowledge-copy,.home-knowledge .home-knowledge-entry{position:relative;left:.5cm}}
+@media(min-width:701px) and (max-width:1000px){.home-knowledge .home-knowledge-layout{column-gap:18px;grid-template-columns:minmax(230px,.9fr) minmax(0,1.3fr)}.home-knowledge .home-knowledge-copy h2{font-size:30px}.home-knowledge .home-knowledge-stage{height:351px}.home-knowledge .home-knowledge-plot{height:390px;transform:translate(-.5cm,-7.5px) scale(.9)}}
+/* Phone typography and diagram elements share proportional size units. */
+@media(max-width:700px){
+ .classic-home .home-knowledge{--home-copy-unit:clamp(.83px,.23vw,.93px);--home-graph-unit:clamp(.6px,.175vw,.72px);margin-top:0;margin-bottom:24px}
+ .home-knowledge .home-knowledge-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;row-gap:10px;padding-top:18px;padding-bottom:18px}
+ .home-knowledge .home-knowledge-copy{grid-column:1;grid-row:1}
+ .home-knowledge .home-knowledge-book{font-size:calc(12 * var(--home-copy-unit));padding:calc(3 * var(--home-copy-unit)) calc(8 * var(--home-copy-unit))}
+ .home-knowledge .home-knowledge-copy h2{font-size:calc(27 * var(--home-copy-unit));line-height:1.3;margin:calc(12 * var(--home-copy-unit)) 0 calc(10 * var(--home-copy-unit))}
+ .home-knowledge .home-knowledge-copy>p{font-size:calc(14 * var(--home-copy-unit));line-height:1.8;max-width:none}
+ .home-knowledge .home-knowledge-stage{grid-column:1;grid-row:2;height:clamp(170px,calc(70svh - 245px),260px)}
+ .home-knowledge .home-knowledge-plot{height:100%;transform:none}
+ .home-knowledge .home-knowledge-entry{grid-column:1;grid-row:3;text-align:center}
+ .home-knowledge .home-knowledge-cta{width:100%;font-size:calc(16 * var(--home-copy-unit))}
+ .home-knowledge .home-knowledge-node{width:calc(28 * var(--home-graph-unit));height:calc(28 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-dot{width:calc(20 * var(--home-graph-unit));height:calc(20 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-hub .home-knowledge-dot{width:calc(31 * var(--home-graph-unit));height:calc(31 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-featured .home-knowledge-dot{width:calc(28 * var(--home-graph-unit));height:calc(28 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-featured .home-knowledge-dot:after{inset:calc(-10 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-label{font-size:clamp(9px,calc(14 * var(--home-graph-unit)),10px);bottom:calc(31 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-hub .home-knowledge-label{font-size:clamp(10px,calc(16 * var(--home-graph-unit)),11px);top:calc(32 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-featured .home-knowledge-label{top:calc(32 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node[data-preview-node="science-044"] .home-knowledge-label,.home-knowledge .home-knowledge-node[data-preview-node="science-006"] .home-knowledge-label{bottom:auto;top:calc(29 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-node.is-social .home-knowledge-label{bottom:auto;top:calc(30 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-tooltip{width:calc(116 * var(--home-graph-unit));padding:calc(6 * var(--home-graph-unit)) calc(6.5 * var(--home-graph-unit));border-radius:calc(8 * var(--home-graph-unit))}
+ .home-knowledge .home-knowledge-tooltip strong{font-size:clamp(9px,calc(13.5 * var(--home-graph-unit)),10px);line-height:1.3}
+ .home-knowledge .home-knowledge-tooltip p{font-size:clamp(7.5px,calc(11 * var(--home-graph-unit)),8px);line-height:1.15;margin-top:1px}
+}
+@media(prefers-reduced-motion:reduce){.home-knowledge .home-knowledge-dot:after{animation:none!important}.home-knowledge .home-knowledge-cta{transition:none}}
+
+
+
+/* Six-book phone composition scales as one artwork, including its typography. */
+.classic-home .home-brand-artwork{display:contents}
+@media(max-width:880px){
+ .classic-home .home-brand-card{display:block;position:relative;width:100%;max-width:360px;aspect-ratio:360 / 146;height:auto;min-height:0;padding:0;margin-inline:auto;border-radius:calc(14px * var(--bookwall-scale,1));box-shadow:0 calc(8px * var(--bookwall-scale,1)) calc(30px * var(--bookwall-scale,1)) #1e322814}
+ .classic-home .home-brand-artwork{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;gap:16px;width:360px;height:146px;padding:18px 14px;transform:scale(var(--bookwall-scale,1));transform-origin:top left}
+ .classic-home .home-brand-artwork .home-book-wall{grid-template-columns:repeat(3,30px);gap:11px 12px;flex:none}
+ .classic-home .home-brand-artwork .home-brand-words{flex:none;width:max-content;white-space:nowrap;font-size:15px;line-height:1.7;text-align:left}
+ .classic-home .home-brand-artwork .home-brand-first{white-space:nowrap}
+}
+
+/* Enlarge the master artwork without changing its vertical layout footprint. */
+.home-introduction .grow-master{position:relative;display:block;flex:none;width:2.52em;height:2.1em}
+.home-introduction .grow-master img{position:absolute;left:0;top:-10%;width:100%;height:120%;max-width:none;object-fit:contain}
+/* Keep the closing sentence on one proportional line, retaining its underline. */
+.home-closing .intro-subtitle{white-space:nowrap}
+.home-closing .closing-statement{position:relative;display:block;width:max-content;max-width:none;left:50%;white-space:nowrap;transform:translateX(-50%) scale(var(--closing-scale,1));transform-origin:center}

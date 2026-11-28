@@ -115,15 +115,20 @@ window.ForestGraph = (() => {
     window.addEventListener('scroll',updateDetailHint,{passive:true});
     window.addEventListener('resize',updateDetailHint);
   }
-  function closeBookDrawer(){const dialog=document.getElementById('mobile-book-drawer');if(dialog?.open)dialog.close();document.body.classList.remove('book-drawer-open');}
+  function closeBookDrawer(){const dialog=document.getElementById('mobile-book-drawer');if(dialog?.open)dialog.close();document.getElementById('mobile-book-picker')?.setAttribute('aria-expanded','false');document.body.classList.remove('book-drawer-open');}
   function selectBook(id){id=graphBookId(id);bookId=bookId===id?'':id;selected='';selectedEdge='';closeBookDrawer();draw(true);}
   function setupBookDrawer(){
     const dialog=document.getElementById('mobile-book-drawer');
-    document.getElementById('mobile-book-picker').onclick=()=>{if(!domain)return;dialog.showModal();document.body.classList.add('book-drawer-open');};
-    document.getElementById('mobile-drawer-close').onclick=closeBookDrawer;
-    dialog.addEventListener('close',()=>document.body.classList.remove('book-drawer-open'));
-    dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeBookDrawer();});
+    const picker=document.getElementById('mobile-book-picker'),select=document.createElement('div');
+    select.className='mobile-book-select';picker.before(select);select.append(picker,dialog);
+    picker.setAttribute('aria-expanded','false');
+    picker.onclick=()=>{if(!domain)return;if(dialog.open){closeBookDrawer();return;}dialog.show();picker.setAttribute('aria-expanded','true');document.body.classList.add('book-drawer-open');};
+    document.getElementById('mobile-drawer-close').onclick=()=>{closeBookDrawer();picker.focus();};
+    select.addEventListener('keydown',event=>{if(event.key==='Escape'&&dialog.open){event.preventDefault();closeBookDrawer();picker.focus();}});
+    document.addEventListener('focusin',closeOutsideBookDrawer);
+    document.addEventListener('click',closeOutsideBookDrawer);
   }
+  function closeOutsideBookDrawer(event){if(!event.target.closest('.mobile-book-select'))closeBookDrawer();}
   /* Seed a full-window point cloud, relax only real edges, then fit with label gutters.
      No synthetic nodes, roots or source knowledge edges. */
   function layout(ids){
@@ -175,19 +180,21 @@ window.ForestGraph = (() => {
     });
   }
   function draw(keep=false){
+    if(!keep)closeBookDrawer();
     clearInterval(pulse);pulse=null;
     if(hoverEdge)setEdgeHover('');
     const ambient=!domain,root=document.querySelector('.network-layout'),stage=document.querySelector('.network-stage');
     if(stage.classList.contains('is-ambient')!==ambient)chart.clear();
     root.classList.toggle('network-ambient',ambient);root.classList.toggle('has-detail',!!(bookId||selected||selectedEdge));stage.classList.toggle('is-ambient',ambient);
     chart.resize();const ids=selection();currentIds=[...ids];
+    const mobile=matchMedia('(max-width:700px)').matches;
     if(ambient)positions=overlayLayout();
     else if(!keep)positions=layout(ids);
     else if(currentIds.some(id=>!positions.has(id))){const extra=layout(ids);for(const id of currentIds)if(!positions.has(id))positions.set(id,extra.get(id));}
     const active=new Set(selected?[selected,...adjacent(selected).flatMap(e=>[e.source_id,e.target_id])]:[]),bookNodes=bookHighlight(ids);
     const points=currentIds.map((id,i)=>{
       const n=nodes.get(id),area=domains.get(n.domain_id),pos=positions.get(id),focus=selected?active.has(id):bookId?bookNodes.has(id):true;
-      return {id,name:n.name,x:pos[0],y:pos[1],symbol:'circle',symbolSize:ambient?ambientNodeSize(i):n.tier===1?18:n.kind==='method'?11:8,itemStyle:{color:ambient?(i%3===0?'#d6bb77':'#83b67c'):focus&&(bookId||selected)?'#b9dd7c':graphColors[n.domain_id],opacity:ambient?.45+(i%6)*.08:focus?.78:.13,borderWidth:0,shadowBlur:ambient?3:focus?4:1,shadowColor:ambient?'#a7d78380':focus&&(bookId||selected)?'#b9dd7c99':graphColors[n.domain_id]+'80'},label:{show:!ambient,position:'right',distance:4,fontSize:n.tier===1?9.1:7.7,color:'#e8efe6',opacity:focus?1:.2,fontFamily:'DengXian, Microsoft YaHei, PingFang SC, sans-serif',fontWeight:n.tier===1?'bold':'normal'},emphasis:{scale:false,label:{show:!ambient},itemStyle:{borderWidth:0,opacity:.95,color:ambient?(i%3===0?'#f5dfa1':'#c8eeab'):'#d8efac',shadowBlur:4}}};
+      return {id,name:n.name,x:pos[0],y:pos[1],symbol:'circle',symbolSize:ambient?ambientNodeSize(i):n.tier===1?18:n.kind==='method'?11:8,itemStyle:{color:ambient?(i%3===0?'#d6bb77':'#83b67c'):focus&&(bookId||selected)?'#b9dd7c':graphColors[n.domain_id],opacity:ambient?.45+(i%6)*.08:focus?.78:.13,borderWidth:0,shadowBlur:ambient?3:focus?4:1,shadowColor:ambient?'#a7d78380':focus&&(bookId||selected)?'#b9dd7c99':graphColors[n.domain_id]+'80'},label:{show:!ambient,position:mobile&&pos[0]>Math.max(140,chart.getWidth()-130)*.78?'left':'right',distance:4,fontSize:n.tier===1?9.1:7.7,color:'#e8efe6',opacity:focus?1:.2,fontFamily:'DengXian, Microsoft YaHei, PingFang SC, sans-serif',fontWeight:n.tier===1?'bold':'normal'},emphasis:{scale:false,label:{show:!ambient},itemStyle:{borderWidth:0,opacity:.95,color:ambient?(i%3===0?'#f5dfa1':'#c8eeab'):'#d8efac',shadowBlur:4}}};
     });
     const edges=d.edges.filter(e=>ids.has(e.source_id)&&ids.has(e.target_id)&&(!ambient||ambientEdgeIds.has(e.edge_id))).map(e=>({...e,source:e.source_id,target:e.target_id,symbol:['none',ambient||e.relation==='关联'?'none':'arrow'],symbolSize:4,lineStyle:{color:ambient?'#a3c69a':graphColors[nodes.get(e.source_id).domain_id],opacity:ambient?.22:selected?((e.source_id===selected||e.target_id===selected)?.75:.06):bookId?(bookNodes.has(e.source_id)&&bookNodes.has(e.target_id)?.7:.07):.3,width:1,curveness:.06}}));
     // Ambient rotation is a visual-only transform on the reused graph view.
@@ -196,7 +203,8 @@ window.ForestGraph = (() => {
     if(!ambient){const model=chart.getModel()?.getSeriesByIndex(0),group=model&&chart.getViewOfSeriesModel(model)?.group;if(group){group.attr({rotation:0,originX:0,originY:0});group.updateTransform();}}
     const previous=keep&&!ambient?chart.getOption().series?.[0]:null,viewState=previous?{zoom:previous.zoom,center:previous.center}:{zoom:1,center:null};
     document.getElementById('graph-fit').hidden=ambient;
-    const viewport=ambient?{left:36,right:36,top:36,bottom:36}:{left:24,right:106,top:35,bottom:45};
+    // Keep the original left edge; give the unused right gutter back to the network.
+    const viewport=ambient?{left:36,right:36,top:36,bottom:36}:{left:24,right:mobile?24:106,top:35,bottom:45};
     chart.setOption({animation:!ambient&&!matchMedia('(prefers-reduced-motion: reduce)').matches,animationDurationUpdate:350,tooltip:{show:!ambient,confine:true,textStyle:{fontSize:9.8},formatter:p=>p.dataType==='edge'?esc(p.data.relation)+'<br>'+esc(p.data.description):esc(p.name)},series:[{type:'graph',layout:'none',...viewport,...viewState,nodeScaleRatio:0,roam:!ambient,draggable:!ambient,scaleLimit:{min:.4,max:4},data:points,links:edges,emphasis:{focus:'none',scale:false,lineStyle:{width:1,opacity:1,color:'#edf5c8'}}}]},!keep);
     document.querySelectorAll('[data-domain]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.domain===domain)));
 
@@ -248,7 +256,7 @@ window.ForestGraph = (() => {
     keepNodesRound();
   }
   function releasePointer(){dragging=false;draggedNode="";}
-  function mount(){document.body.classList.add('graph-dark');setupBookDrawer();setupDetailHint();document.getElementById('graph-fit').onclick=()=>draw();sampleAmbientEdges();window.addEventListener("mouseup",releasePointer);window.addEventListener("touchend",releasePointer);dragging=false;domain='';selected='';selectedEdge='';bookId='';positions=new Map();chart=echarts.init(document.getElementById('knowledge-canvas'));document.getElementById('knowledge-canvas').addEventListener('wheel',zoomAtPointer,{capture:true,passive:false});let width=chart.getWidth(),height=chart.getHeight();resize=new ResizeObserver(()=>{if(!chart)return;const el=document.getElementById('knowledge-canvas');if(width===el.clientWidth&&height===el.clientHeight)return;width=el.clientWidth;height=el.clientHeight;cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{if(chart)draw(true);});});resize.observe(document.getElementById('knowledge-canvas'));document.querySelectorAll('[data-domain]').forEach(b=>b.onclick=()=>{domain=domain===b.dataset.domain?'':b.dataset.domain;selected='';selectedEdge='';bookId='';draw();});chart.on('mouseover',p=>{if(p.dataType==='edge'&&p.data.edge_id)setEdgeHover(p.data.edge_id);});chart.on('mouseout',p=>{if(p.dataType==='edge'&&p.data.edge_id===hoverEdge)setEdgeHover('');});chart.getZr().on('globalout',()=>setEdgeHover(''));chart.on('click',p=>{if(!domain)return;if(p.dataType==='node'&&nodes.has(p.data.id)){selected=p.data.id;selectedEdge='';bookId='';draw(true);}else if(p.dataType==='edge'&&p.data.edge_id){selectedEdge=p.data.edge_id;renderPanel();}});draw();}
-  function dispose(){window.removeEventListener('scroll',updateDetailHint);window.removeEventListener('resize',updateDetailHint);document.getElementById('knowledge-canvas')?.removeEventListener('wheel',zoomAtPointer,true);closeBookDrawer();hoverEdge='';document.body.classList.remove('graph-dark');window.removeEventListener("mouseup",releasePointer);window.removeEventListener("touchend",releasePointer);dragging=false;clearInterval(pulse);cancelAnimationFrame(frame);resize?.disconnect();chart?.dispose();chart=null;}
+  function mount(context={}){document.body.classList.add('graph-dark');setupBookDrawer();setupDetailHint();document.getElementById('graph-fit').onclick=()=>draw();sampleAmbientEdges();window.addEventListener("mouseup",releasePointer);window.addEventListener("touchend",releasePointer);dragging=false;const entryBook=books.find(book=>book.id===context.bookId),entryNode=nodes.get(context.nodeId);bookId=entryBook?graphBookId(entryBook.id):'';selected=entryNode?entryNode.node_id:'';domain=entryNode?.domain_id||(bookId?nodes.get(d.bookLinks.find(link=>link.book_id===bookId)?.node_id)?.domain_id:'')||'';selectedEdge='';positions=new Map();chart=echarts.init(document.getElementById('knowledge-canvas'));document.getElementById('knowledge-canvas').addEventListener('wheel',zoomAtPointer,{capture:true,passive:false});let width=chart.getWidth(),height=chart.getHeight();resize=new ResizeObserver(()=>{if(!chart)return;const el=document.getElementById('knowledge-canvas');if(width===el.clientWidth&&height===el.clientHeight)return;width=el.clientWidth;height=el.clientHeight;cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{if(chart)draw(true);});});resize.observe(document.getElementById('knowledge-canvas'));document.querySelectorAll('[data-domain]').forEach(b=>b.onclick=()=>{domain=domain===b.dataset.domain?'':b.dataset.domain;selected='';selectedEdge='';bookId='';draw();});chart.on('mouseover',p=>{if(p.dataType==='edge'&&p.data.edge_id)setEdgeHover(p.data.edge_id);});chart.on('mouseout',p=>{if(p.dataType==='edge'&&p.data.edge_id===hoverEdge)setEdgeHover('');});chart.getZr().on('globalout',()=>setEdgeHover(''));chart.on('click',p=>{if(!domain)return;if(p.dataType==='node'&&nodes.has(p.data.id)){selected=p.data.id;selectedEdge='';bookId='';draw(true);}else if(p.dataType==='edge'&&p.data.edge_id){selectedEdge=p.data.edge_id;renderPanel();}});draw();}
+  function dispose(){document.removeEventListener('focusin',closeOutsideBookDrawer);document.removeEventListener('click',closeOutsideBookDrawer);window.removeEventListener('scroll',updateDetailHint);window.removeEventListener('resize',updateDetailHint);document.getElementById('knowledge-canvas')?.removeEventListener('wheel',zoomAtPointer,true);closeBookDrawer();hoverEdge='';document.body.classList.remove('graph-dark');window.removeEventListener("mouseup",releasePointer);window.removeEventListener("touchend",releasePointer);dragging=false;clearInterval(pulse);cancelAnimationFrame(frame);resize?.disconnect();chart?.dispose();chart=null;}
   return {html,mount,dispose};
 })();
